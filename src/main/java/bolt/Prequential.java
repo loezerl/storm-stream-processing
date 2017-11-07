@@ -38,16 +38,17 @@ public class Prequential extends BaseRichBolt {
         try{
             value = (String)tuple.getValue(0);
 
-        }catch(NullPointerException e) {
-            System.err.println("[ERROR] Could not parser the Tuple (Instance) -> " + e.getMessage());
+        }catch(Exception e) {
+            System.err.println("[ERROR] Could not parser the Tuple (Instance) -> " + e.getMessage()
+            + "\tTuple -> " + tuple.toString());
             _collector.reportError(e);
         }
-        try{
             Vector<Double> instance = InstanceParser.Parser(value);
             result = classifier.test(instance);
+        try{
             classifier.train(instance);
         }catch (Exception e){
-            System.err.println("[ERROR] Could not parser Instance and Test/Train the Classifier -> " + e.getMessage());
+            System.err.println("[ERROR] Could not Train the Classifier -> " + e.getMessage() + "\tTuple -> " + tuple.toString());
         }
         try{
             _collector.emit(tuple, new Values(result));

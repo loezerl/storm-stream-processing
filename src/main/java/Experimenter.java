@@ -6,6 +6,7 @@ import classifiers.KNN;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
 import org.apache.storm.StormSubmitter;
+import org.apache.storm.kafka.SpoutConfig;
 import org.apache.storm.kafka.spout.KafkaSpoutConfig;
 import org.apache.storm.topology.TopologyBuilder;
 import org.apache.storm.kafka.spout.KafkaSpout;
@@ -32,7 +33,7 @@ public class Experimenter {
         List<String> topics = new ArrayList<>();
         topics.add(topic);
 
-        KafkaSpoutConfig kafkaConfig = KafkaSpoutConfig.builder("localhost:9092", topics)
+        KafkaSpoutConfig kafkaConfig = KafkaSpoutConfig.builder("localhost:9092", "instances")
                 .setGroupId("teste")
                 .build();
 
@@ -42,9 +43,9 @@ public class Experimenter {
         ParserResults resultsbolt = new ParserResults();
 
         builder.setSpout("instances", kafkaSpout, 1);
-        builder.setBolt("clean_instances", new CleanInstance(), 1)
+        builder.setBolt("clean_instances", new CleanInstance(), 8)
                 .shuffleGrouping("instances");
-        builder.setBolt("prequential", new Prequential(), 1)
+        builder.setBolt("prequential", new Prequential(), 8)
                 .shuffleGrouping("clean_instances");
         builder.setBolt("results", resultsbolt, 1)
                 .shuffleGrouping("prequential");
@@ -53,7 +54,7 @@ public class Experimenter {
         Classifier.setInstance(classifier);
 
         Config config = new Config();
-        config.setDebug(true);
+        config.setDebug(false);
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
@@ -62,25 +63,28 @@ public class Experimenter {
                     System.err.println("Acertos: " + resultsbolt.hits);
                     System.err.println("Erros: " + resultsbolt.miss);
                     System.err.println("Instancias: " + (resultsbolt.miss + resultsbolt.hits));
+                    long used  = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+                    System.err.println("Memory: " + (used/1024.0)/1024.0);
                 }catch (Exception e){}
             }
         });
 
+        long total = Runtime.getRuntime().totalMemory();
         config.setNumWorkers(1);
         LocalCluster cluster = new LocalCluster();
         try {
             cluster.submitTopology("kafka-storm", config, builder.createTopology());
-            Utils.sleep(60000);
+            Utils.sleep(60000*30);
         }catch(Exception e){
             throw new IllegalStateException("Couldn't initialize the topology", e);
         }
-        cluster.killTopology("kafka-storm");
+        //cluster.killTopology("kafka-storm");
         cluster.shutdown();
 
-//        System.err.println("\n\n==========Results\n");
-//        System.err.println("Acertos: " + resultsbolt.hits);
-//        System.err.println("Erros: " + resultsbolt.miss);
-//        System.err.println("Instancias: " + (resultsbolt.miss + resultsbolt.hits));
+        System.err.println("\n\n==========Results\n");
+        System.err.println("Acertos: " + resultsbolt.hits);
+        System.err.println("Erros: " + resultsbolt.miss);
+        System.err.println("Instancias: " + (resultsbolt.miss + resultsbolt.hits));
 
 //        System.setProperty("storm.jar", "/home/loezerl-fworks/IdeaProjects/storm-knn2/out/artifacts/storm_knn2_jar/storm-knn2.jar");
 //        try {

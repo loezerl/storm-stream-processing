@@ -36,7 +36,8 @@ public class ParserResults extends BaseRichBolt{
             }
             _collector.ack(tuple);
         }catch(Exception e){
-            System.err.println("[ERROR] Parser Results -> " + e.getMessage());
+            System.err.println("[ERROR] Parser Results -> " + e.getMessage()
+            + "\t Value -> " + tuple.toString());
         }
     }
 
@@ -47,6 +48,8 @@ public class ParserResults extends BaseRichBolt{
 
     @Override
     public void cleanup(){
+
+        System.err.println("\n\n\nALO BRASIL\n\n\n");
 
         float accuracy = hits + miss;
         accuracy = (hits*100)/accuracy;

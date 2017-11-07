@@ -12,7 +12,9 @@ public class Similarity {
 
         if(a.size() != b.size()){
             System.err.println("Instances with different sizes.");
-            System.exit(1);
+            System.err.println("Instance a: " + a.toString());
+            System.err.println("Instance b: " + b.toString());
+            return 999;
         }
 
         for(int i=0; i<a.size(); i++){

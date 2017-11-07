@@ -30,7 +30,7 @@ public class KNN extends Classifier {
     }
 
     @Override
-    public boolean test(Vector<Double> instance){
+    public synchronized boolean test(Vector<Double> instance){
 
         if(Window.size() == 0){return false;}
 
